@@ -25,6 +25,7 @@ import com.rs.net.host.HostListType;
 import com.rs.net.host.HostManager;
 import com.rs.net.packets.logic.LogicPacketDispatcher;
 import com.rs.net.packets.outgoing.OutgoingPacketDispatcher;
+import com.rs.net.worldlist.WorldList;
 import com.rs.network.sql.GameDatabase;
 import com.rs.network.sql.PassiveDatabaseWorker;
 import com.rs.plugin.CommandPluginDispatcher;
@@ -88,6 +89,7 @@ public class GameLoader {
 			LogUtility.log(LogType.INFO, "Loading Game World & Service Network.");
 			CoresManager.init();
 			World.init();
+			WorldList.init();
 			ServerChannelHandler.init();
 			Huffman.init();
 			MapArchiveKeys.init();

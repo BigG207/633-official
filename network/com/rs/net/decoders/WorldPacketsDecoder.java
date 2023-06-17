@@ -54,6 +54,9 @@ public final class WorldPacketsDecoder extends Decoder {
 	//TODO: Convert; check -1 packets in new handler as well.
 	private final static int PLAYER_OPTION_6_PACKET = -1;
 	private final static int PLAYER_OPTION_9_PACKET = -1;
+	
+	//World List Decoder 
+	private final static int WORLD_LIST_UPDATE = 60;
 
 	private final Player player;
 
@@ -144,6 +147,7 @@ public final class WorldPacketsDecoder extends Decoder {
 		PACKET_SIZES[15] = 2;
 		PACKET_SIZES[47] = 3;
 		PACKET_SIZES[0] = 7;
+		PACKET_SIZES[60] = 4;
 
 	}
 	public WorldPacketsDecoder(Session session, Player player) {

@@ -28,6 +28,7 @@ import com.rs.net.encoders.other.Graphics;
 import com.rs.net.encoders.other.HintIcon;
 import com.rs.net.encoders.other.PublicChatMessage;
 import com.rs.net.encoders.other.QuickChatMessage;
+import com.rs.net.worldlist.WorldList;
 import com.rs.utilities.IntegerInputAction;
 import com.rs.utilities.RandomUtils;
 import com.rs.utilities.StringInputAction;
@@ -895,15 +896,16 @@ public class WorldPacketsEncoder extends Encoder {
 	public WorldPacketsEncoder sendFriends() {
 		OutputStream stream = new OutputStream();
 		stream.writePacketVarShort(getPlayer(), 34);
-		for (String username : getPlayer().getFriendsIgnores().getFriends()) {
+		for (String username : player.getFriendsIgnores().getFriends()) {
 			String displayName;
 			Player p2 = World.getPlayerByDisplayName(username);
+			if (p2 == null)
+				p2 = World.getLobbyPlayerByDisplayName(username);
 			if (p2 != null)
 				displayName = p2.getDisplayName();
 			else
 				displayName = Utility.formatPlayerNameForDisplay(username);
-			getPlayer().getPackets().sendFriend(Utility.formatPlayerNameForDisplay(username), displayName, 1,
-					p2 != null && getPlayer().getFriendsIgnores().isOnline(p2), false, stream);
+			player.getPackets().sendFriend(Utility.formatPlayerNameForDisplay(username), displayName, 1, p2 != null && player.getFriendsIgnores().isOnline(p2), false, stream);
 		}
 		stream.endPacketVarShort();
 		getSession().write(stream);
@@ -928,7 +930,7 @@ public class WorldPacketsEncoder extends Encoder {
 		stream.writeShort(putOnline ? world : 0);
 		stream.writeByte(getPlayer().getFriendsIgnores().getRank(Utility.formatPlayerNameForProtocol(username)));
 		if (putOnline) {
-			stream.writeString(GameConstants.SERVER_NAME);
+			stream.writeString(World.containsLobbyPlayer(username) ? " Lobby": GameConstants.SERVER_NAME);
 			stream.writeByte(0);
 		}
 		return this;
@@ -1165,9 +1167,11 @@ public class WorldPacketsEncoder extends Encoder {
 		OutputStream stream = new OutputStream();
 		stream.writePacketVarShort(getPlayer(), 41);
 		stream.writeByte(getPlayer().getFriendsIgnores().getIgnores().size());
-		for (String username : getPlayer().getFriendsIgnores().getIgnores()) {
+		for (String username : player.getFriendsIgnores().getIgnores()) {
 			String display;
 			Player p2 = World.getPlayerByDisplayName(username);
+			if (p2 == null)
+				p2 = World.getLobbyPlayerByDisplayName(username);
 			if (p2 != null)
 				display = p2.getDisplayName();
 			else
@@ -1560,6 +1564,42 @@ public class WorldPacketsEncoder extends Encoder {
 		stream.writeShort(moveZ >> 2);
 		getSession().write(stream);
 		return this;
+	}
+	
+	public void sendWorldList(boolean full) {
+		OutputStream packet = new OutputStream();
+		packet.writePacketVarShort(player, 119); //world list packet #encoder
+		packet.writeByte(1);
+		packet.writeByte(2);
+		packet.writeByte(full ? 1 : 0);
+		int size = WorldList.WORLDS.size();
+		if (full) {
+			packet.writeSmart(size);
+			for (int world = 1; world <= WorldList.WORLDS.size(); world++) {
+				packet.writeSmart(WorldList.getWorld(world).getCountryId()); //Country Flag Icon
+				packet.writeGJString(WorldList.getWorld(world).getCountryName());
+			}
+			packet.writeSmart(0);
+			packet.writeSmart(size + 1);
+			packet.writeSmart(size);
+			for (int world = 1; world <= WorldList.WORLDS.size(); world++) {
+				packet.writeSmart(world); 
+				packet.writeByte(0); 
+				int flags = 0;
+				if (WorldList.WORLDS.get(world).isMembers()) flags |= 0x1;
+				flags |= 0x8;
+				packet.writeInt(flags); 
+				packet.writeGJString(WorldList.getWorld(world).getActivity());
+				packet.writeGJString(WorldList.WORLDS.get(world).getIP());
+			}
+			packet.writeInt(-1723296702);
+		}
+		for (int world = 1; world <= WorldList.WORLDS.size(); world++) {
+			packet.writeSmart(world);
+			packet.writeShort(100);
+		}
+		packet.endPacketVarShort();
+		session.write(packet);
 	}
 
 	public void sendInputIntegerScript(String message, IntegerInputAction onInputGivenAction) {
