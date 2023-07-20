@@ -1,7 +1,10 @@
 package com.rs.utilities;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -116,6 +119,43 @@ public final class Utility {
 			}
 		}
 		return classes;
+	}
+	
+	public static List<String> getFileText(String file) {
+		List<String> text = new ArrayList<>();
+		File realFile = new File(file);
+		if (!realFile.exists()) {
+			return text;
+		}
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.equals("") || line.equals(" ")) {
+					continue;
+				}
+				text.add(line);
+			}
+			reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return text;
+	}
+	
+	/**
+	 * This method clears all the text inside a file
+	 *
+	 * @param file
+	 * 		The file location
+	 */
+	public static void clearFile(String file) {
+		try (PrintWriter writer = new PrintWriter(file)) {
+			writer.print("");
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static final int getDistance(WorldTile t1, WorldTile t2) {

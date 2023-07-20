@@ -105,10 +105,10 @@ public final class LoginPacketsDecoder extends Decoder {
 			if (temp.getCurrentFriendChat() != null)
 				temp.getCurrentFriendChat().leaveChat(temp, true);
 		}
-		if (Utility.invalidAccountName(username)) {
+		/*if (Utility.invalidAccountName(username)) {
 			session.getLoginPackets().sendClientPacket(3);
 			return;
-		}
+		}*/
 
 		Player player;
 		if (World.getPlayers().size() >= GameConstants.PLAYERS_LIMIT - 10) {
@@ -123,7 +123,22 @@ public final class LoginPacketsDecoder extends Decoder {
 			session.getLoginPackets().sendClientPacket(9);
 			return;
 		}
-		if (!AccountCreation.exists(username)) {
+		
+		  if (session.creatingAccounts.contains(session.getAccountCreateIP()) && AntiFlood.getSessionsIP(session.getAccountCreateIP()) >= 1) {
+	            player = new Player(password);
+	            session.creatingAccounts.remove(session.getAccountCreateIP());
+		  } else {
+		if (!AccountCreation.exists(username)) { 
+			   session.getLoginPackets().sendClientPacket(3);
+               return;
+		}
+			player = AccountCreation.loadPlayer(username);
+			if (player == null) {
+				session.getLoginPackets().sendClientPacket(20);
+				return;
+			}
+		  }
+		  /*if (!AccountCreation.exists(username)) {
 			player = new Player(password);
 		} else {
 			player = AccountCreation.loadPlayer(username);
@@ -131,7 +146,7 @@ public final class LoginPacketsDecoder extends Decoder {
 				session.getLoginPackets().sendClientPacket(20);
 				return;
 			}
-		}
+		}*/
 		if ((HostManager.contains(player.getUsername(), HostListType.BANNED_IP))) {
 			session.getLoginPackets().sendClientPacket(4);
 			return;
@@ -191,10 +206,10 @@ public final class LoginPacketsDecoder extends Decoder {
 		int affid = stream.readInt();
 		stream.skip(stream.readUnsignedByte()); // useless settings
 
-		if (Utility.invalidAccountName(username)) {
+	/*	if (Utility.invalidAccountName(username)) {
 			session.getLoginPackets().sendClientPacket(3);
 			return;
-		}
+		}*/
 		Player player;
 		if (World.getPlayers().size() >= GameConstants.PLAYERS_LIMIT - 10) {
 			session.getLoginPackets().sendClientPacket(7);
@@ -208,15 +223,20 @@ public final class LoginPacketsDecoder extends Decoder {
 			session.getLoginPackets().sendClientPacket(9);
 			return;
 		}
-		if (!AccountCreation.exists(username)) {
-			player = new Player(password);
-		} else {
+		  if (session.creatingAccounts.contains(session.getAccountCreateIP()) && AntiFlood.getSessionsIP(session.getAccountCreateIP()) >= 1) {
+	            player = new Player(password);
+	            session.creatingAccounts.remove(session.getAccountCreateIP());
+		  } else {
+		if (!AccountCreation.exists(username)) { 
+			   session.getLoginPackets().sendClientPacket(3);
+             return;
+		}
 			player = AccountCreation.loadPlayer(username);
 			if (player == null) {
 				session.getLoginPackets().sendClientPacket(20);
 				return;
 			}
-		}
+		  }
 		if ((HostManager.contains(player.getUsername(), HostListType.BANNED_IP))) {
 			session.getLoginPackets().sendClientPacket(4);
 			return;

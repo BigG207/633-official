@@ -2,6 +2,9 @@ package com.rs.net;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -15,11 +18,15 @@ import com.rs.game.player.PlayerCombat;
 import com.rs.game.player.content.Emotes.Emote;
 import com.rs.io.InputStream;
 import com.rs.io.OutputStream;
+import com.rs.net.decoders.AccountDetailDecoder;
 import com.rs.net.decoders.ClientPacketsDecoder;
 import com.rs.net.decoders.Decoder;
+import com.rs.net.decoders.EmailRegistrationDecoder;
 import com.rs.net.decoders.GrabPacketsDecoder;
 import com.rs.net.decoders.LoginPacketsDecoder;
 import com.rs.net.decoders.WorldPacketsDecoder;
+import com.rs.net.encoders.AccountDetailEncoder;
+import com.rs.net.encoders.EmailRegistrationEncoder;
 import com.rs.net.encoders.Encoder;
 import com.rs.net.encoders.GrabPacketsEncoder;
 import com.rs.net.encoders.LoginPacketsEncoder;
@@ -91,6 +98,12 @@ public class Session {
 		case 3:
 			decoder = new WorldPacketsDecoder(this, (Player) attachement);
 			break;
+		  case 4:
+				decoder = new EmailRegistrationDecoder(this);
+				break;
+			    case 5:
+				decoder = new AccountDetailDecoder(this);
+				break;
 		case -1:
 		default:
 			decoder = null;
@@ -113,6 +126,12 @@ public class Session {
 		case 2:
 			encoder = new WorldPacketsEncoder(this, (Player) attachement);
 			break;
+	    case 3:
+		encoder = new EmailRegistrationEncoder(this);
+		break;
+	    case 4:
+		encoder = new AccountDetailEncoder(this);
+		break;
 		case -1:
 		default:
 			encoder = null;
@@ -127,6 +146,14 @@ public class Session {
 	public GrabPacketsEncoder getGrabPackets() {
 		return (GrabPacketsEncoder) encoder;
 	}
+	
+    public EmailRegistrationEncoder getEmailComplete() {
+	return (EmailRegistrationEncoder) encoder;
+    }
+    
+    public AccountDetailEncoder getAccountComplete() {
+	return (AccountDetailEncoder) encoder;
+    }
 
 	public WorldPacketsEncoder getWorldPackets() {
 		return (WorldPacketsEncoder) encoder;
@@ -274,6 +301,11 @@ public class Session {
 		ChannelBuffer buffer = ChannelBuffers.copiedBuffer(outStream.getBuffer(), 0, outStream.getOffset());
 		return channel.write(buffer);
 	}
+	
+    public String getAccountCreateIP() {
+    	return channel == null ? "" : channel.getRemoteAddress().toString().split(":")[0].replace("/", "");
+    }
+    public static Set<String> creatingAccounts = Collections.synchronizedSet(new HashSet<>());
 
 	public final ChannelFuture write(ChannelBuffer outStream) {
 		if (outStream == null || !channel.isOpen()) {
